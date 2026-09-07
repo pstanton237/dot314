@@ -62,6 +62,7 @@ import {
 	resolveToolCallFromParents,
 } from "./tool-call-copy.ts";
 import { buildNodeOrder } from "./tree-order.ts";
+import { installCustomTypeFilter, parseHiddenCustomTypes } from "./tree-filter.ts";
 import {
 	getAnycopyRenderHeight,
 	getAnycopyTreeHeight,
@@ -125,6 +126,7 @@ type anycopyConfig = {
 		previewFocusTreeRatio?: number;
 	};
 	treeFilterMode?: TreeFilterMode;
+	hiddenCustomTypes?: string[];
 	persistFoldState?: boolean;
 };
 
@@ -134,6 +136,7 @@ type anycopyRuntimeConfig = {
 	hintMode: HintMode;
 	layoutRatios: PaneLayoutRatios;
 	treeFilterMode: TreeFilterMode;
+	hiddenCustomTypes: string[];
 	persistFoldState: boolean;
 };
 
@@ -198,6 +201,7 @@ const loadConfig = (): anycopyRuntimeConfig => {
 			hintMode: DEFAULT_HINT_MODE,
 			layoutRatios: { ...DEFAULT_LAYOUT_RATIOS },
 			treeFilterMode: DEFAULT_TREE_FILTER_MODE,
+			hiddenCustomTypes: [],
 			persistFoldState: DEFAULT_PERSIST_FOLD_STATE,
 		};
 	}
@@ -226,7 +230,8 @@ const loadConfig = (): anycopyRuntimeConfig => {
 		preview: normalizeRatio(parsed.layout?.previewFocusTreeRatio, DEFAULT_LAYOUT_RATIOS.preview),
 	};
 
-	return { keys, shortcut, hintMode, layoutRatios, treeFilterMode, persistFoldState };
+	const hiddenCustomTypes = parseHiddenCustomTypes(parsed.hiddenCustomTypes);
+	return { keys, shortcut, hintMode, layoutRatios, treeFilterMode, hiddenCustomTypes, persistFoldState };
 };
 
 const pluralizeNode = (count: number): string => (count === 1 ? "node" : "nodes");
@@ -1016,6 +1021,7 @@ export default function anycopyExtension(pi: ExtensionAPI) {
 				opts?.initialSelectedId,
 				treeFilterMode,
 			);
+			installCustomTypeFilter(selector, config.hiddenCustomTypes);
 
 			if (persistFoldState) {
 				const restoredFoldedNodeIds = normalizeFoldedNodeIds(

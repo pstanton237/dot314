@@ -70,6 +70,7 @@ Notes:
 - Tool-result previews always show the originating tool name and arguments above the result. Copying the node includes both the call and result
 - `Shift+R` anchors a range at the focused node. Tree movement extends or shrinks the inclusive range and adds every node in that range to the existing selection
 - Search, filter, and fold changes finish an active range while preserving its selected nodes
+- The default and no-tools views hide custom messages listed in `hiddenCustomTypes`. Use the all-entries filter to inspect or copy those messages.
 - `Tab` switches directly between the tree-focused and preview-focused layouts. Both panes remain visible according to their configured ratios
 - `?` lists the anycopy and native tree keybindings available in the overlay
 - An optional Pi shortcut opens anycopy without clearing the editor draft. This copy-only view keeps `Shift+C` available; use `/anycopy` when you want `Enter` to navigate the session tree
@@ -94,6 +95,7 @@ Edit `~/.pi/agent/extensions/anycopy/config.json`:
 
 - `treeFilterMode`: initial tree filter mode when opening `/anycopy`; defaults to `default` to match `/tree`
   - one of: `default` | `no-tools` | `user-only` | `labeled-only` | `all`
+- `hiddenCustomTypes`: custom message type names to hide in default and no-tools views. Names match the entry's `customType` exactly and case-sensitively, for example `["background-status", "tool-diagnostics"]`. Defaults to `[]`. Each name must be a nonblank string.
 - `persistFoldState`: whether `/anycopy` persists folded branches across reopenings and later sessions; defaults to `true`; when disabled, `/anycopy` does not read or write hidden fold-state session entries
 - `shortcut`: optional Pi shortcut that opens copy-only anycopy without clearing the current editor draft. Set it to a key such as `ctrl+shift+c`, or leave it as `null`
 - `hints.mode`: `full` displays shortcut hints below the tree, while `compact` uses one status row for help and Enter guidance
@@ -104,6 +106,7 @@ Edit `~/.pi/agent/extensions/anycopy/config.json`:
 ```json
 {
   "treeFilterMode": "default",
+  "hiddenCustomTypes": [],
   "persistFoldState": true,
   "shortcut": null,
   "hints": {
