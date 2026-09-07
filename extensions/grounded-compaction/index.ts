@@ -24,7 +24,7 @@ import {
     type SessionEntry,
 } from "@earendil-works/pi-coding-agent";
 
-import { collectFilesTouched, type FilesTouchedEntry } from "../_shared/files-touched-core.ts";
+import { collectFilesTouched, registerFilesTouchedTracking, type FilesTouchedEntry } from "../_shared/files-touched-core.ts";
 import { serializeConversationForCompaction } from "../_shared/compaction-serialization.ts";
 import {
     registerGroundedPortableSummarizer,
@@ -1896,5 +1896,6 @@ export function registerGroundedCompaction(
 }
 
 export default function groundedCompactionExtension(pi: ExtensionAPI): void {
+    registerFilesTouchedTracking(pi);
     registerGroundedCompaction(pi);
 }

@@ -2,6 +2,12 @@ import * as fs from "node:fs";
 import path from "node:path";
 
 import type { SessionEntry } from "@earendil-works/pi-coding-agent";
+import { Check } from "typebox/value";
+import { collectNestedFileActions as collectNested, registerNestedFileTracking } from "./files-touched-nested.ts";
+import {
+	PatchArgumentsSchema, CommandArgumentsSchema, BashArgumentsSchema, OperationCallSchema,
+	type FileAction, type IncomingFileCall, type FileCallResult, type FileCallParser, type ParsedFileActions, type FileTrackingHost,
+} from "./files-touched-contract.ts";
 
 export type FileTouchOperation = "read" | "write" | "edit" | "move" | "delete";
 
@@ -17,23 +23,26 @@ type FileMove = {
 	to: string;
 };
 
-type FileTrackingAction =
-	| { kind: "touch"; path: string; operation: FileTouchOperation }
-	| { kind: "move"; from: string; to: string };
-
-export type CodexFileTrackingAction =
-	| { kind: "touch"; path: string; operation: "read" | "write" | "edit" | "create" | "delete" }
-	| { kind: "move"; from: string; to: string };
+export type CodexFileTrackingAction = FileAction;
 
 type TrackedToolCall =
-	| { kind: "existing"; actions: FileTrackingAction[] }
-	| { kind: "codex"; toolName: string; toolArguments: Record<string, unknown> };
+	| { kind: "patch"; input: string }
+	| { kind: "invalid-patch" }
+	| { kind: "operations"; result: ParsedFileActions };
 
 type TrackedTouchRecord = {
 	path: string;
 	operation: FileTouchOperation;
 	timestamp: number;
 };
+
+const warnedIncompleteNestedKeys = new Set<string>();
+
+function warnIncompleteNestedFileActivity(key: string): void {
+	if (warnedIncompleteNestedKeys.has(key)) return;
+	warnedIncompleteNestedKeys.add(key);
+	console.warn({ component: "files-touched", code: "INCOMPLETE_NESTED_FILE_ACTIVITY", toolCallId: key });
+}
 
 type ParsedRootPrefixedPath = {
 	root: string;
@@ -452,8 +461,8 @@ function extractJsonObject(text: string, prefix: string): Record<string, unknown
 }
 
 function extractCliNamedArg(cmd: string, key: string): string | null {
-	const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-	const match = cmd.match(new RegExp(`(?:^|\\s)${escapedKey}=(?:\"([^\"]+)\"|'([^']+)'|(\\S+))`));
+	const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replaceAll("_", "[-_]");
+	const match = cmd.match(new RegExp(`(?:^|\\s)(?:${escapedKey}=|--${escapedKey}(?:=|\\s+))(?:\"([^\"]+)\"|'([^']+)'|(\\S+))`));
 	return firstDefinedString(...(match?.slice(1) ?? []));
 }
 
@@ -463,9 +472,9 @@ function commandStartsWith(cmd: string, name: string): boolean {
 }
 
 function extractReadPathFromCliCommand(cmd: string): string | null {
-	const readFileMatch = cmd.match(/(?:^|\s)read_file\s+.*?\bpath=(?:\"([^\"]+)\"|'([^']+)'|(\S+))/);
-	if (readFileMatch) {
-		return stripReadSliceSuffix(firstDefinedString(...readFileMatch.slice(1)) ?? "");
+	if (commandStartsWith(cmd, "read_file")) {
+		const target = extractCliNamedArg(cmd, "path");
+		return target === null ? null : stripReadSliceSuffix(target);
 	}
 
 	const simpleReadMatch = cmd.match(/^(?:read|cat)\s+(?:\"([^\"]+)\"|'([^']+)'|(\S+))/);
@@ -500,7 +509,7 @@ function tokenizeShellCommand(cmd: string): string[] {
 		}
 
 		if (quote) {
-			if (char === "\\") {
+			if (char === "\\" && quote === '"' && /["\\$`\n]/.test(next)) {
 				escaped = true;
 				continue;
 			}
@@ -524,36 +533,8 @@ function tokenizeShellCommand(cmd: string): string[] {
 			continue;
 		}
 
-		if (char === "\r" || char === "\n") {
-			flush();
-			tokens.push(";");
-			if (char === "\r" && next === "\n") {
-				index += 1;
-			}
-			continue;
-		}
-
 		if (/\s/.test(char)) {
 			flush();
-			continue;
-		}
-
-		if (char === ";") {
-			flush();
-			tokens.push(char);
-			continue;
-		}
-
-		if ((char === "&" || char === "|") && next === char) {
-			flush();
-			tokens.push(char + next);
-			index += 1;
-			continue;
-		}
-
-		if (char === "&" || char === "|") {
-			flush();
-			tokens.push(char);
 			continue;
 		}
 
@@ -564,27 +545,28 @@ function tokenizeShellCommand(cmd: string): string[] {
 	return tokens;
 }
 
-function splitShellCommands(cmd: string): string[][] {
-	const commands: string[][] = [];
-	let current: string[] = [];
-
-	for (const token of tokenizeShellCommand(cmd)) {
-		if (token === ";" || token === "&&" || token === "||" || token === "|" || token === "&") {
-			if (current.length > 0) {
-				commands.push(current);
-				current = [];
-			}
+function splitCommandSources(cmd: string): string[] {
+	const commands: string[] = [];
+	let start = 0;
+	let quote: "'" | '"' | null = null;
+	for (let index = 0; index < cmd.length; index++) {
+		const char = cmd[index];
+		if (char === "\\" && quote !== "'") { index++; continue; }
+		if (quote) {
+			if (char === quote) quote = null;
 			continue;
 		}
-
-		current.push(token);
+		if (char === "'" || char === '"') { quote = char; continue; }
+		if (!";|&\r\n".includes(char)) continue;
+		commands.push(cmd.slice(start, index));
+		start = index + 1;
 	}
+	commands.push(cmd.slice(start));
+	return commands.map((command) => command.trim()).filter(Boolean);
+}
 
-	if (current.length > 0) {
-		commands.push(current);
-	}
-
-	return commands;
+function splitShellCommands(cmd: string): string[][] {
+	return splitCommandSources(cmd).map(tokenizeShellCommand);
 }
 
 function stripShellCommandWrappers(tokens: string[]): string[] {
@@ -671,22 +653,22 @@ function isLiteralShellPathOperand(value: string): boolean {
 }
 
 function pushShellTouch(
-	actions: FileTrackingAction[],
+	actions: FileAction[],
 	pathValue: string,
-	operation: FileTouchOperation,
+	operation: Exclude<FileTouchOperation, "move">,
 ): void {
 	if (isLiteralShellPathOperand(pathValue)) {
 		actions.push({ kind: "touch", path: pathValue, operation });
 	}
 }
 
-function pushShellMove(actions: FileTrackingAction[], from: string, to: string): void {
+function pushShellMove(actions: FileAction[], from: string, to: string): void {
 	if (isLiteralShellPathOperand(from) && isLiteralShellPathOperand(to)) {
 		actions.push({ kind: "move", from, to });
 	}
 }
 
-function extractRedirectWriteTargets(tokens: string[], actions: FileTrackingAction[]): void {
+function extractRedirectWriteTargets(tokens: string[], actions: FileAction[]): void {
 	for (let i = 0; i < tokens.length; i++) {
 		const token = tokens[i];
 
@@ -777,127 +759,98 @@ function stripHeredocBodies(cmd: string): string {
 	return result.join("\n");
 }
 
-function parseBashActions(cmd: string): FileTrackingAction[] {
-	const actions: FileTrackingAction[] = [];
+type ParsedShellCommand = { command: string[]; actions: FileAction[] };
 
-	for (const tokens of splitShellCommands(stripHeredocBodies(cmd))) {
-		extractRedirectWriteTargets(tokens, actions);
+function handleGitShellCommand(command: string[], actions: FileAction[]): boolean {
+	if (command[0] !== "git") return false;
+	if (command[1] === "mv") {
+		const operands = extractShellOperands(command.slice(2));
+		if (operands.length === 2) pushShellMove(actions, operands[0], operands[1]);
+	}
+	if (command[1] === "rm") {
+		for (const operand of extractShellOperands(command.slice(2))) pushShellTouch(actions, operand, "delete");
+	}
+	return true;
+}
 
-		const command = stripShellCommandWrappers(stripRedirectTokens(tokens));
-		if (command.length === 0) {
-			continue;
-		}
+function handleMoveShellCommand(command: string[], actions: FileAction[]): boolean {
+	if (command[0] !== "mv") return false;
+	const operands = extractShellOperands(command.slice(1));
+	if (operands.length === 2) pushShellMove(actions, operands[0], operands[1]);
+	return true;
+}
 
-		if (command[0] === "git" && command[1] === "mv") {
-			const operands = extractShellOperands(command.slice(2));
-			if (operands.length === 2) {
-				pushShellMove(actions, operands[0], operands[1]);
-			}
-			continue;
-		}
+function handleDeleteShellCommand(command: string[], actions: FileAction[]): boolean {
+	if (!["rm", "trash", "trash-put", "unlink"].includes(command[0])) return false;
+	for (const operand of extractShellOperands(command.slice(1))) pushShellTouch(actions, operand, "delete");
+	return true;
+}
 
-		if (command[0] === "git" && command[1] === "rm") {
-			for (const operand of extractShellOperands(command.slice(2))) {
-				pushShellTouch(actions, operand, "delete");
-			}
-			continue;
-		}
+function handleSedShellCommand(command: string[], actions: FileAction[]): boolean {
+	if (command[0] !== "sed") return false;
+	if (command.some((token) => /^-[a-z]*i/.test(token))) {
+		const hasExplicitExpr = command.some((token) => token === "-e" || token === "-f");
+		const operands = extractShellOperands(command.slice(1));
+		const fileOperands = hasExplicitExpr ? operands : operands.slice(1);
+		for (const operand of fileOperands) if (!looksLikeSedExpression(operand)) pushShellTouch(actions, operand, "edit");
+	}
+	return true;
+}
 
-		if (command[0] === "mv") {
-			const operands = extractShellOperands(command.slice(1));
-			if (operands.length === 2) {
-				pushShellMove(actions, operands[0], operands[1]);
-			}
-			continue;
-		}
+function handleCopyShellCommand(command: string[], actions: FileAction[]): boolean {
+	if (command[0] !== "cp" && command[0] !== "rsync") return false;
+	const operands = extractShellOperands(command.slice(1));
+	if (operands.length >= 2) pushShellTouch(actions, operands[operands.length - 1], "write");
+	return true;
+}
 
-		if (command[0] === "rm" || command[0] === "trash" || command[0] === "trash-put" || command[0] === "unlink") {
-			for (const operand of extractShellOperands(command.slice(1))) {
-				pushShellTouch(actions, operand, "delete");
-			}
-			continue;
-		}
+function handleMultiWriteShellCommand(command: string[], actions: FileAction[]): boolean {
+	if (command[0] !== "tee" && command[0] !== "touch") return false;
+	for (const operand of extractShellOperands(command.slice(1))) pushShellTouch(actions, operand, "write");
+	return true;
+}
 
-		if (command[0] === "sed") {
-			if (command.some((t) => /^-[a-z]*i/.test(t))) {
-				const hasExplicitExpr = command.some((t) => t === "-e" || t === "-f");
-				const operands = extractShellOperands(command.slice(1));
-				const fileOperands = hasExplicitExpr ? operands : operands.slice(1);
-				for (const operand of fileOperands) {
-					if (!looksLikeSedExpression(operand)) {
-						pushShellTouch(actions, operand, "edit");
-					}
-				}
-			}
-			continue;
-		}
+function handlePatchShellCommand(command: string[], actions: FileAction[]): boolean {
+	if (command[0] !== "patch") return false;
+	const operands = extractShellOperands(command.slice(1));
+	if (operands.length >= 1) pushShellTouch(actions, operands[0], "edit");
+	return true;
+}
 
-		if (command[0] === "cp" || command[0] === "rsync") {
-			const operands = extractShellOperands(command.slice(1));
-			if (operands.length >= 2) {
-				pushShellTouch(actions, operands[operands.length - 1], "write");
-			}
-			continue;
-		}
-
-		if (command[0] === "tee") {
-			for (const operand of extractShellOperands(command.slice(1))) {
-				pushShellTouch(actions, operand, "write");
-			}
-			continue;
-		}
-
-		if (command[0] === "touch") {
-			for (const operand of extractShellOperands(command.slice(1))) {
-				pushShellTouch(actions, operand, "write");
-			}
-			continue;
-		}
-
-		if (command[0] === "patch") {
-			const operands = extractShellOperands(command.slice(1));
-			if (operands.length >= 1) {
-				pushShellTouch(actions, operands[0], "edit");
-			}
-			continue;
-		}
-
-		if (command[0] === "curl") {
-			for (let i = 1; i < command.length; i++) {
-				if ((command[i] === "-o" || command[i] === "--output") && i + 1 < command.length) {
-					pushShellTouch(actions, command[i + 1], "write");
-					break;
-				}
-			}
-			continue;
-		}
-
-		if (command[0] === "wget") {
-			for (let i = 1; i < command.length; i++) {
-				if ((command[i] === "-O" || command[i] === "--output-document") && i + 1 < command.length) {
-					pushShellTouch(actions, command[i + 1], "write");
-					break;
-				}
-			}
-			continue;
-		}
-
-		if (command[0] === "cat") {
-			for (const operand of extractShellOperands(command.slice(1))) {
-				pushShellTouch(actions, operand, "read");
-			}
-			continue;
-		}
-
-		if (command[0] === "head" || command[0] === "tail") {
-			for (const operand of extractHeadTailReadOperands(command.slice(1))) {
-				pushShellTouch(actions, operand, "read");
-			}
-			continue;
+function handleDownloadShellCommand(command: string[], actions: FileAction[]): boolean {
+	const flag = command[0] === "curl" ? ["-o", "--output"] : command[0] === "wget" ? ["-O", "--output-document"] : [];
+	if (flag.length === 0) return false;
+	for (let index = 1; index < command.length - 1; index++) {
+		if (command[index] === flag[0] || command[index] === flag[1]) {
+			pushShellTouch(actions, command[index + 1], "write");
+			break;
 		}
 	}
+	return true;
+}
 
-	return actions;
+function handleReadShellCommand(command: string[], actions: FileAction[]): boolean {
+	if (command[0] === "cat") {
+		for (const operand of extractShellOperands(command.slice(1))) pushShellTouch(actions, operand, "read");
+		return true;
+	}
+	if (command[0] !== "head" && command[0] !== "tail") return false;
+	for (const operand of extractHeadTailReadOperands(command.slice(1))) pushShellTouch(actions, operand, "read");
+	return true;
+}
+
+const SHELL_COMMAND_HANDLERS = [
+	handleGitShellCommand, handleMoveShellCommand, handleDeleteShellCommand, handleSedShellCommand,
+	handleCopyShellCommand, handleMultiWriteShellCommand, handlePatchShellCommand, handleDownloadShellCommand,
+	handleReadShellCommand,
+];
+
+function parseShellCommand(tokens: string[]): ParsedShellCommand {
+	const actions: FileAction[] = [];
+	extractRedirectWriteTargets(tokens, actions);
+	const command = stripShellCommandWrappers(stripRedirectTokens(tokens));
+	for (const handle of SHELL_COMMAND_HANDLERS) if (handle(command, actions)) break;
+	return { command, actions };
 }
 
 type ApplyPatchCandidate =
@@ -915,8 +868,8 @@ function resolveCodexWorkdir(cwd: string | null | undefined, workdir: string | u
 	return workdir ? resolvePathFromBase(workdir, cwd) : (cwd ?? "");
 }
 
-function rebaseShellActions(actions: FileTrackingAction[], workdir: string): CodexFileTrackingAction[] {
-	const rebased: CodexFileTrackingAction[] = [];
+function rebaseShellActions(actions: FileAction[], workdir: string): FileAction[] {
+	const rebased: FileAction[] = [];
 
 	for (const action of actions) {
 		if (action.kind === "move") {
@@ -928,13 +881,11 @@ function rebaseShellActions(actions: FileTrackingAction[], workdir: string): Cod
 			continue;
 		}
 
-		if (action.operation !== "move") {
-			rebased.push({
-				kind: "touch",
-				path: resolvePathFromBase(action.path, workdir),
-				operation: action.operation,
-			});
-		}
+		rebased.push({
+			kind: "touch",
+			path: resolvePathFromBase(action.path, workdir),
+			operation: action.operation,
+		});
 	}
 
 	return rebased;
@@ -1056,7 +1007,7 @@ function completedApplyPatchActions(
 	input: string,
 	details: unknown,
 	cwd: string | null | undefined,
-): CodexFileTrackingAction[] {
+): FileAction[] {
 	const result = parseApplyPatchResult(details);
 	if (!result) {
 		return [];
@@ -1066,7 +1017,7 @@ function completedApplyPatchActions(
 	const created = normalizedPathSet(result.createdFiles, cwd);
 	const deleted = normalizedPathSet(result.deletedFiles, cwd);
 	const moved = normalizedMoveSet(result.movedFiles, cwd);
-	const actions: CodexFileTrackingAction[] = [];
+	const actions: FileAction[] = [];
 
 	for (const candidate of parseApplyPatchCandidates(input, cwd)) {
 		if (candidate.kind === "move") {
@@ -1102,35 +1053,69 @@ export function parseCompletedCodexFileActions(args: {
 	toolResult: { details?: unknown; isError?: boolean };
 	cwd?: string | null;
 }): CodexFileTrackingAction[] {
-	if (args.toolName === "exec_command") {
-		if (typeof args.toolArguments.cmd !== "string") {
-			return [];
-		}
-		if (args.toolArguments.workdir !== undefined && typeof args.toolArguments.workdir !== "string") {
-			return [];
-		}
-		if (args.toolResult.isError) {
-			return [];
-		}
-
-		const workdir = resolveCodexWorkdir(args.cwd, args.toolArguments.workdir as string | undefined);
-		return rebaseShellActions(parseBashActions(args.toolArguments.cmd), workdir);
-	}
-
-	if (args.toolName === "apply_patch" && typeof args.toolArguments.input === "string") {
-		return completedApplyPatchActions(args.toolArguments.input, args.toolResult.details, args.cwd);
-	}
-
-	return [];
+	if (args.toolName !== "exec_command" && args.toolName !== "apply_patch") return [];
+	return parseCompletedFileActions({
+		...args,
+		cwd: args.cwd,
+		toolResult: { content: undefined, details: args.toolResult.details, isError: args.toolResult.isError === true },
+	}).actions;
 }
 
-function parseRpExecActions(cmd: string): FileTrackingAction[] {
+function parseShellFileActions(cmd: string, workdir?: string): ParsedFileActions {
+	const result: ParsedFileActions = { actions: [], incomplete: false };
+	for (const tokens of splitShellCommands(stripHeredocBodies(cmd))) {
+		const parsedCommand = parseShellCommand(tokens);
+		result.actions.push(...(workdir === undefined ? parsedCommand.actions : rebaseShellActions(parsedCommand.actions, workdir)));
+		const command = parsedCommand.command;
+		if (!command[0] || !["rp-cli", "rpce-cli"].includes(path.basename(command[0]))) continue;
+		const parsed = parseRepoPromptCliActions(command.slice(1));
+		result.incomplete ||= parsed.incomplete;
+		for (const action of parsed.actions) {
+			const paths = action.kind === "move" ? [action.from, action.to] : [action.path];
+			if (paths.every((value) => isLiteralShellPathOperand(value) && isAbsolutePath(value))) {
+				result.actions.push(action);
+			} else {
+				result.incomplete = true;
+			}
+		}
+	}
+	return result;
+}
+
+function parseRepoPromptCliActions(tokens: string[]): ParsedFileActions {
+	const option = (short: string, long: string): string | undefined => {
+		for (let index = 0; index < tokens.length; index++) {
+			if (tokens[index] === short || tokens[index] === long) return tokens[index + 1];
+			if (tokens[index].startsWith(`${long}=`)) return tokens[index].slice(long.length + 1);
+		}
+		return undefined;
+	};
+	const call = option("-c", "--call");
+	const json = option("-j", "--json");
+	if (call) {
+		if (!["read_file", "apply_edits", "file_actions"].includes(call)) return { actions: [], incomplete: false };
+		if (json === undefined) return { actions: [], incomplete: true };
+		let args: unknown;
+		try {
+			args = JSON.parse(json);
+		} catch (error) {
+			if (!(error instanceof SyntaxError)) throw error;
+			return { actions: [], incomplete: true };
+		}
+		const actions = getTrackedToolActions({ toolName: "rp", toolArguments: { call, args } });
+		return { actions, incomplete: actions.length === 0 };
+	}
+	const command = option("-e", "--exec");
+	return { actions: command ? splitCommandSources(command).flatMap(parseRpExecActions) : [], incomplete: false };
+}
+
+function parseRpExecActions(cmd: string): FileAction[] {
 	const normalized = cmd.trim();
 	if (!normalized) {
 		return [];
 	}
 
-	const actions: FileTrackingAction[] = [];
+	const actions: FileAction[] = [];
 
 	const readFileArgs = extractJsonObject(normalized, "call read_file");
 	if (readFileArgs && typeof readFileArgs.path === "string") {
@@ -1148,7 +1133,7 @@ function parseRpExecActions(cmd: string): FileTrackingAction[] {
 		const targetPath = typeof fileActionsArgs.path === "string" ? fileActionsArgs.path : null;
 		const newPath = typeof fileActionsArgs.new_path === "string" ? fileActionsArgs.new_path : null;
 		if (action === "create" && targetPath) {
-			actions.push({ kind: "touch", path: targetPath, operation: "write" });
+			actions.push({ kind: "touch", path: targetPath, operation: "create" });
 		}
 		if (action === "delete" && targetPath) {
 			actions.push({ kind: "touch", path: targetPath, operation: "delete" });
@@ -1170,7 +1155,7 @@ function parseRpExecActions(cmd: string): FileTrackingAction[] {
 		const targetPath = extractCliNamedArg(normalized, "path");
 		const newPath = extractCliNamedArg(normalized, "new_path");
 		if (action === "create" && targetPath) {
-			actions.push({ kind: "touch", path: targetPath, operation: "write" });
+			actions.push({ kind: "touch", path: targetPath, operation: "create" });
 		}
 		if (action === "delete" && targetPath) {
 			actions.push({ kind: "touch", path: targetPath, operation: "delete" });
@@ -1208,57 +1193,18 @@ function parseRpExecActions(cmd: string): FileTrackingAction[] {
 	return actions;
 }
 
-function getTrackedToolActions(name: string, args: Record<string, unknown>): FileTrackingAction[] {
-	if ((name === "read" || name === "write" || name === "edit") && typeof args.path === "string") {
-		return [{ kind: "touch", path: args.path, operation: name }];
+function getTrackedToolActions(call: IncomingFileCall): FileAction[] {
+	if (!Check(OperationCallSchema, call)) return [];
+	if (call.toolName === "rp_exec") return parseRpExecActions(call.toolArguments.cmd);
+	if (call.toolName !== "rp") {
+		return [{ kind: "touch", path: call.toolArguments.path, operation: call.toolName }];
 	}
-
-	if (name === "rp") {
-		const rpCall = typeof args.call === "string" ? args.call : null;
-		const rpArgs = args.args && typeof args.args === "object" && !Array.isArray(args.args)
-			? (args.args as Record<string, unknown>)
-			: null;
-		if (!rpCall || !rpArgs) {
-			return [];
-		}
-
-		if (rpCall === "read_file" && typeof rpArgs.path === "string") {
-			return [{ kind: "touch", path: rpArgs.path, operation: "read" }];
-		}
-
-		if (rpCall === "apply_edits" && typeof rpArgs.path === "string") {
-			return [{ kind: "touch", path: rpArgs.path, operation: "edit" }];
-		}
-
-		if (rpCall === "file_actions") {
-			const action = typeof rpArgs.action === "string" ? rpArgs.action : "";
-			if (action === "create" && typeof rpArgs.path === "string") {
-				return [{ kind: "touch", path: rpArgs.path, operation: "write" }];
-			}
-			if (action === "delete" && typeof rpArgs.path === "string") {
-				return [{ kind: "touch", path: rpArgs.path, operation: "delete" }];
-			}
-			if (
-				action === "move"
-				&& typeof rpArgs.path === "string"
-				&& typeof rpArgs.new_path === "string"
-			) {
-				return [{ kind: "move", from: rpArgs.path, to: rpArgs.new_path }];
-			}
-		}
+	const rp = call.toolArguments;
+	if (rp.call !== "file_actions") {
+		return [{ kind: "touch", path: rp.args.path, operation: rp.call === "read_file" ? "read" : "edit" }];
 	}
-
-	if (name === "rp_exec") {
-		const cmd = typeof args.cmd === "string" ? args.cmd : "";
-		return parseRpExecActions(cmd);
-	}
-
-	if (name === "bash") {
-		const command = typeof args.command === "string" ? args.command : "";
-		return parseBashActions(command);
-	}
-
-	return [];
+	if (rp.args.action === "move") return [{ kind: "move", from: rp.args.path, to: rp.args.new_path }];
+	return [{ kind: "touch", path: rp.args.path, operation: rp.args.action }];
 }
 
 function extractTextFromContent(content: unknown): string {
@@ -1297,16 +1243,47 @@ function getToolCallId(value: unknown): string | null {
 	);
 }
 
-function toFileTrackingAction(action: CodexFileTrackingAction): FileTrackingAction {
-	if (action.kind === "move") {
-		return action;
+function parseTrackedToolCall(call: IncomingFileCall, cwd: string | null | undefined): TrackedToolCall {
+	if (call.toolName === "apply_patch") {
+		return Check(PatchArgumentsSchema, call.toolArguments)
+			? { kind: "patch", input: call.toolArguments.input } : { kind: "invalid-patch" };
 	}
+	let result: ParsedFileActions = { actions: [], incomplete: false };
+	if (call.toolName === "exec_command") {
+		result = Check(CommandArgumentsSchema, call.toolArguments)
+			? parseShellFileActions(call.toolArguments.cmd, resolveCodexWorkdir(cwd, call.toolArguments.workdir))
+			: { actions: [], incomplete: true };
+	} else if (call.toolName === "bash" && Check(BashArgumentsSchema, call.toolArguments)) {
+		result = parseShellFileActions(call.toolArguments.command);
+	} else {
+		result.actions = getTrackedToolActions(call);
+	}
+	return { kind: "operations", result };
+}
 
-	return {
-		kind: "touch",
-		path: action.path,
-		operation: action.operation === "create" ? "write" : action.operation,
-	};
+function completeTrackedToolCall(call: TrackedToolCall, toolResult: FileCallResult, cwd: string | null | undefined): ParsedFileActions {
+	if (call.kind === "invalid-patch") return { actions: [], incomplete: true };
+	if (call.kind === "patch") return { actions: completedApplyPatchActions(call.input, toolResult.details, cwd), incomplete: false };
+	if (toolResult.isError) return { actions: [], incomplete: false };
+	const result = call.result;
+	const noOp = /applied:\s*0|no changes applied|nothing to (?:do|change)/i.test(extractTextFromContent(toolResult.content));
+	if (noOp) return { ...result, actions: result.actions.filter((action) => !(action.kind === "touch" && action.operation === "edit")) };
+	return result;
+}
+
+/** Resolves completed tool evidence to file operations; failed calls contribute only file changes reported by `apply_patch`. */
+export const parseCompletedFileActions: FileCallParser = (call) => completeTrackedToolCall(
+	parseTrackedToolCall(call, call.cwd), call.toolResult, call.cwd,
+);
+
+/** Collects nested file operations in message order using the same parser as direct calls. */
+export function collectNestedFileActions(messages: Parameters<typeof collectNested>[0], cwd?: string | null) {
+	return collectNested(messages, cwd, parseCompletedFileActions).actions;
+}
+
+/** Enables live pi-codex-conversion attribution; repeated registration shares one recorder per event bus. */
+export function registerFilesTouchedTracking(pi: FileTrackingHost): void {
+	registerNestedFileTracking(pi, parseCompletedFileActions);
 }
 
 export function collectFilesTouched(
@@ -1335,24 +1312,24 @@ export function collectFilesTouched(
 				? (block as { name: string }).name
 				: "";
 			const args = (block as { arguments?: unknown }).arguments;
-			const argObject = args && typeof args === "object" && !Array.isArray(args)
-				? (args as Record<string, unknown>)
-				: {};
 			if (!toolCallId || !toolName) {
 				continue;
 			}
 
-			const actions = getTrackedToolActions(toolName, argObject);
-			if (actions.length > 0) {
-				toolCalls.set(toolCallId, { kind: "existing", actions });
-			} else if (toolName === "exec_command" || toolName === "apply_patch") {
-				toolCalls.set(toolCallId, { kind: "codex", toolName, toolArguments: argObject });
-			}
+			toolCalls.set(toolCallId, parseTrackedToolCall({ toolName, toolArguments: args }, cwd));
 		}
 	}
 
 	const touches: TrackedTouchRecord[] = [];
 	const moves: FileMove[] = [];
+	const nested = collectNested(entries.flatMap((entry) => entry.type === "message" ? [entry.message] : []), cwd, parseCompletedFileActions);
+	for (const key of nested.incompleteKeys) warnIncompleteNestedFileActivity(key);
+	const nestedByMessage = new Map<object, typeof nested.actions>();
+	for (const item of nested.actions) {
+		const items = nestedByMessage.get(item.message) ?? [];
+		items.push(item);
+		nestedByMessage.set(item.message, items);
+	}
 
 	for (const entry of entries) {
 		if (entry.type !== "message") {
@@ -1363,40 +1340,18 @@ export function collectFilesTouched(
 		if (msg.role !== "toolResult") {
 			continue;
 		}
+		const actions = (nestedByMessage.get(msg) ?? []).map((item) => item.action);
 
 		const toolCallId = firstDefinedString(
 			msg.toolCallId,
 			(msg as { tool_call_id?: unknown }).tool_call_id,
 			(msg as { tool_use_id?: unknown }).tool_use_id,
 		);
-		if (!toolCallId) {
-			continue;
-		}
-
-		const trackedCall = toolCalls.get(toolCallId);
-		if (!trackedCall) {
-			continue;
-		}
-
-		const toolResultText = extractTextFromContent(msg.content);
-		const matchesNoOp = /applied:\s*0|no changes applied|nothing to (?:do|change)/i.test(toolResultText);
-		let actions: FileTrackingAction[];
-		let isNoOpEdit: boolean;
-
-		if (trackedCall.kind === "existing") {
-			if (msg.isError) {
-				continue;
-			}
-			actions = trackedCall.actions;
-			isNoOpEdit = matchesNoOp;
-		} else {
-			actions = parseCompletedCodexFileActions({
-				toolName: trackedCall.toolName,
-				toolArguments: trackedCall.toolArguments,
-				toolResult: { details: msg.details, isError: msg.isError },
-				cwd,
-			}).map(toFileTrackingAction);
-			isNoOpEdit = trackedCall.toolName === "exec_command" && matchesNoOp;
+		const trackedCall = toolCallId ? toolCalls.get(toolCallId) : undefined;
+		if (trackedCall) {
+			const parsed = completeTrackedToolCall(trackedCall, { content: msg.content, details: msg.details, isError: msg.isError }, cwd);
+			actions.push(...parsed.actions);
+			if (parsed.incomplete) console.warn({ component: "files-touched", code: "INCOMPLETE_FILE_ACTIVITY", toolCallId });
 		}
 
 		for (const action of actions) {
@@ -1410,13 +1365,9 @@ export function collectFilesTouched(
 				continue;
 			}
 
-			if (isNoOpEdit && action.operation === "edit") {
-				continue;
-			}
-
 			touches.push({
 				path: action.path,
-				operation: action.operation,
+				operation: action.operation === "create" ? "write" : action.operation,
 				timestamp: msg.timestamp,
 			});
 		}

@@ -14,7 +14,7 @@ import type {
 } from "@earendil-works/pi-coding-agent";
 import { Key, matchesKey } from "@earendil-works/pi-tui";
 
-import { collectFilesTouched, type FilesTouchedEntry } from "../_shared/files-touched-core.ts";
+import { collectFilesTouched, registerFilesTouchedTracking, type FilesTouchedEntry } from "../_shared/files-touched-core.ts";
 
 const STATUS_KEY = "handover";
 const DEFAULT_AUTO_SUBMIT_SECONDS = 10;
@@ -634,6 +634,7 @@ async function generateHandoverDraftViaAgent(params: {
 }
 
 export default function (pi: ExtensionAPI) {
+    registerFilesTouchedTracking(pi);
     let pending: PendingAutoSubmit | null = null;
 
     const clearPending = (ctx?: ExtensionContext, notify?: string) => {

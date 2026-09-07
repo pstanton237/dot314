@@ -18,6 +18,8 @@ Borrowing heavily from [pasky/pi-amplike](https://github.com/pasky/pi-amplike) a
 
 ## Features
 
+The files-touched list covers supported tools run inside pi-codex-conversion Code and Notebook `exec` calls, calls completed through `wait`, and literal `rp-cli`/`rpce-cli` shell commands. Live nested tracking requires pi-codex-conversion 3.0.30 or newer. When file evidence is missing, the extension warns and includes the confirmed operations in the handover. See [Files Touched coverage](../../packages/pi-files-touched/README.md#what-it-tracks) for supported commands and limits.
+
 - `/handover [purpose]`
   - purpose is optional (defaults to "continue from current milestone/state")
   - generates a handover draft using the **current session model** (no separate model selection)
@@ -36,7 +38,9 @@ Borrowing heavily from [pasky/pi-amplike](https://github.com/pasky/pi-amplike) a
 
    - `~/.pi/agent/extensions/handover/`
 
-2. Run `/reload` in Pi (or restart Pi)
+2. Copy `extensions/_shared/files-touched-core.ts`, `extensions/_shared/files-touched-contract.ts`, and `extensions/_shared/files-touched-nested.ts` to `~/.pi/agent/extensions/_shared/`.
+
+3. Run `/reload` in Pi (or restart Pi)
 
 ## Usage
 

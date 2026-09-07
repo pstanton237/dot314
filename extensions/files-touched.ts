@@ -10,9 +10,10 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { DynamicBorder } from "@earendil-works/pi-coding-agent";
 import { Container, Key, matchesKey, type SelectItem, SelectList, Text } from "@earendil-works/pi-tui";
 
-import { collectFilesTouched, type FilesTouchedEntry } from "./_shared/files-touched-core.ts";
+import { collectFilesTouched, registerFilesTouchedTracking, type FilesTouchedEntry } from "./_shared/files-touched-core.ts";
 
 export default function (pi: ExtensionAPI) {
+	registerFilesTouchedTracking(pi);
 	pi.registerCommand("files-touched", {
 		description: "Show files read/written/edited/moved/deleted in this session",
 		handler: async (_args, ctx) => {
