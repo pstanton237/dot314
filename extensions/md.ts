@@ -1,5 +1,5 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { execSync } from "child_process";
+import * as Clipboard from "@mariozechner/clipboard";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
@@ -484,10 +484,10 @@ async function generateMarkdownFromSession(
 }
 
 /**
- * Copy text to clipboard (macOS)
+ * Copy text to clipboard
  */
-function copyToClipboard(text: string): void {
-  execSync("pbcopy", { input: text });
+async function copyToClipboard(text: string): Promise<void> {
+  await Clipboard.setText(text);
 }
 
 /**
@@ -665,7 +665,7 @@ export default function (pi: ExtensionAPI) {
         const mode = exportAll ? " (full file)" : " (branch)";
 
         if (choice === "Copy to clipboard") {
-          copyToClipboard(result.content);
+          await copyToClipboard(result.content);
           ctx.ui.notify(`Copied to clipboard${suffix}${mode}`, "success");
           return;
         }
