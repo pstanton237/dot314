@@ -116,7 +116,7 @@
 
 - ● [`fork-from-first.ts`](fork-from-first.ts)
   - `/fork-from-first` forks the current session from its first user message and switches into the new fork immediately
-  - If `rewind/` is installed, it requests rewind's conversation-only fork mode ("keep current files") for that fork
+  - If [pi-rewind-hook](https://github.com/nicobailon/pi-rewind-hook) is installed, it requests rewind's conversation-only fork mode ("keep current files") for that fork
 
 - ● [`move-session.ts`](move-session.ts)
   - `/move-session <targetCwd>` moves the *current session* to a different working directory, intended for when you started pi in one folder but come to find that you need it in another after building up valuable context
@@ -226,8 +226,6 @@
       - This version adds `alt+v` performing both arm + paste directly from the clipboard, preserving newlines and bypassing Pi's large-paste markers (e.g. `[paste #3 +122 lines]`)
   - When enabled, disable the standalone `shell-completions/`, `file-picker.ts`, and `raw-paste.ts` extensions to avoid editor-component conflicts
 
-- ◐ [`rewind/`](rewind/) ([README](./rewind/README.md)) — **Archived.** Session-native rewrite developed in ([`b432676`](https://github.com/w-winter/dot314/commit/b43267682059a4b7c37d557b608e8413ecbd0298)) now adopted upstream into [nicobailon/pi-rewind-hook](https://github.com/nicobailon/pi-rewind-hook).  NB: this version interoperates more cleanly with `anycopy`.
-
 - ◐ [`files-touched.ts`](files-touched.ts) (upstream: [badlogic/pi-mono `.pi/extensions/files.ts`](https://github.com/badlogic/pi-mono/blob/main/.pi/extensions/files.ts))
   - `/files-touched` shows files read/written/edited in the active session branch and opens the selected file in VS Code
   - This version extends the upstream original to also detect file reads/edits/writes performed through the tools of `repoprompt-mcp` and `repoprompt-cli` (`rp`, `rp_exec`) and their `read_file` / `file_actions create` / `apply_edits` actions
@@ -248,7 +246,7 @@
     - Uses a more opinionated continuation prompt separating verified status, decisions, surprises, rejected paths, facts vs inferences, mandatory reading, and next steps, with guardrails against exhaustive file-list restatements
     - Adds prior compaction summaries from the current session JSONL when they exist
     - Gives the drafting model a deterministic files-touched list derived from [`_shared/files-touched-core.ts`](_shared/files-touched-core.ts) (which covers Pi native tools, RepoPrompt tools, recognized shell operations through `bash` and `exec_command`, and structured `apply_patch` changes) and appends that same list to the child draft
-    - If [`rewind/`](rewind/) is installed, requests a conversation-only fork
+    - If [pi-rewind-hook](https://github.com/nicobailon/pi-rewind-hook) is installed, requests a conversation-only fork
   - Optional auto-submit countdown (typing or `Esc` cancels; `Enter` submits normally)
   - Plays well with [`session-ask/`](session-ask/) because the preserved fork lineage lets `session_ask` consult parent sessions when needed
 
