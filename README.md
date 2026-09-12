@@ -148,6 +148,7 @@ These extensions are tracked in the repository but not exported by the Pi packag
 | ● | `iterm-tab-color.ts` |
 | ● | `orca-session-tab-title/` |
 | ◐ | `plan-mode.ts` |
+| ◐ | `pi-claude-bridge/` |
 | ● | `pi-codex-apply-patch-display/` |
 | ● | `poly-notify/` |
 | ○ | `preset.ts` |

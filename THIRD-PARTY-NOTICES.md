@@ -67,6 +67,13 @@ text. This file provides a consolidated overview.
 - **Used in:**
   - `extensions/pi-codex-goal/` (◐ modified — defers mid-run compaction to the next `context` event after a complete tool turn and updates the smoke test for Pi's SDK runtime)
 
+### vanillagreencom/kendex
+- **URL:** https://github.com/vanillagreencom/kendex/tree/main/pi-extensions/pi-claude-bridge
+- **License:** MIT
+- **Copyright:** © 2026 Eli Dickinson
+- **Used in:**
+  - `extensions/pi-claude-bridge/` (◐ modified — complete Pi system-prompt forwarding, bridge-owned prompt replacement, strict MCP configuration on every query, and no Claude Code filesystem settings by default outside connector sessions)
+
 ### Graffioh/pi-screenshots-picker
 - **URL:** https://github.com/Graffioh/pi-screenshots-picker
 - **License:** MIT

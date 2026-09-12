@@ -245,6 +245,12 @@
   - Gives the child Pi's complete projected session context, including active compaction and branch-summary state, instead of serializing only raw message entries
   - Parses compound Bash commands with `just-bash`; every simple command must resolve to `allow`, and unparseable commands are blocked unless `permissions.mode` is `yolo`
 
+- ◐ [`pi-claude-bridge/`](pi-claude-bridge/) ([README](pi-claude-bridge/README.md)) (upstream: [Eli Dickinson's `vanillagreencom/kendex`](https://github.com/vanillagreencom/kendex/tree/main/pi-extensions/pi-claude-bridge))
+  - Routes `pi-claude/*` models through a logged-in Claude Code account while Pi retains its terminal interface, tools, session history, effort controls, and optional connector access
+  - Sends Pi's complete effective system prompt as the custom prompt supplied to the Claude Agent SDK on every query, including resumed sessions, instead of selectively appending context to Claude Code's preset prompt
+  - Uses bridge-owned, trust-scoped `systemPrompt` settings for replacing the base prompt, optionally naming the active model, and preserving Pi-managed project context and skills
+  - Removes upstream's selective prompt-forwarding controls, enables strict MCP configuration for every query, and loads none of Claude Code's filesystem settings by default unless connectors are enabled
+
 - ◐ [`image-url-broker/`](image-url-broker/) ([README](image-url-broker/README.md)) (design source: [can1357/oh-my-pi blob broker](https://github.com/can1357/oh-my-pi/tree/main/packages/coding-agent/src/blob-broker))
   - Publishes JPEG, PNG, GIF, and WebP data to a configured static HTTPS directory and replaces repeated inline base64 in supported Anthropic and OpenAI provider requests with content-addressed URLs
   - Keeps ordinary base64 image data in Pi sessions and retries a failed Codex URL request once with inline image data
