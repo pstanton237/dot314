@@ -236,6 +236,15 @@
 - ◐ [`branch-out/`](branch-out/) ([README](branch-out/README.md)) (upstream: [davidgasquez/dotfiles](https://github.com/davidgasquez/dotfiles/blob/main/agents/pi/extensions/branch-term.ts))
   - `/branch [--model <query>] [message]` forks the current session into a new terminal split pane or tab; backend-aware routing across cmux, tmux, iTerm2, Terminal.app, Ghostty, and Orca; split direction is config-driven (`left/right/up/down`, or `clockwise`/`counterclockwise` layout policies for cmux/tmux) with comma-separated fallback lists for cross-backend configs; optional `--model` targets a different model in the child; optional `message` prefills the child editor with a 10-second auto-submit countdown
 
+- ◐ [`btw/`](btw/) ([README](btw/README.md)) (upstream: [pasky/pi-amplike](https://github.com/pasky/pi-amplike/blob/main/extensions/btw.ts))
+  - `/btw [--mode <name>] [--model <provider/id|partial>] <prompt>` runs a persisted child agent in the background while the current session continues working
+  - Inherits upstream's live progress and result rendering, parent-linked child sessions, compaction continuation, optional child-extension loading, and non-interactive Amp permission enforcement
+  - Uses conventional `--mode` and `--model` options instead of upstream's single-dash forms
+  - Resolves exact or fuzzy model queries within the session's scoped models, preferring the current provider while trying ranked matches until one has usable request authentication
+  - Passes the selected model's resolved API key, headers, and environment through Pi's current `ModelRuntime` request path, with a direct reauthentication error for missing OpenAI Codex OAuth
+  - Gives the child Pi's complete projected session context, including active compaction and branch-summary state, instead of serializing only raw message entries
+  - Parses compound Bash commands with `just-bash`; every simple command must resolve to `allow`, and unparseable commands are blocked unless `permissions.mode` is `yolo`
+
 - ◐ [`image-url-broker/`](image-url-broker/) ([README](image-url-broker/README.md)) (design source: [can1357/oh-my-pi blob broker](https://github.com/can1357/oh-my-pi/tree/main/packages/coding-agent/src/blob-broker))
   - Publishes JPEG, PNG, GIF, and WebP data to a configured static HTTPS directory and replaces repeated inline base64 in supported Anthropic and OpenAI provider requests with content-addressed URLs
   - Keeps ordinary base64 image data in Pi sessions and retries a failed Codex URL request once with inline image data

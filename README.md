@@ -136,6 +136,7 @@ These extensions are tracked in the repository but not exported by the Pi packag
 | | Extension |
 |---|---|
 | ● | `brave-search/` |
+| ◐ | `btw/` |
 | ○ | `code-actions/` |
 | ◐ | `cmux/` |
 | ● | `codex-compaction-coordinator/` |
