@@ -13,7 +13,7 @@ Borrowing heavily from [pasky/pi-amplike](https://github.com/pasky/pi-amplike) a
 - **Compaction-history addendum**: if present in the session history, prior compaction summaries from the current session JSONL are included in an addendum.
 - **Files touched list**: deterministically computes a files-touched block from the same branch-history logic as [`files-touched`](../files-touched.ts), including explicit read/write/edit/move/delete markers across native Pi tools, `rp`, and `rp_exec`, presents that to the handover-generating model for recall aid, and appends it to the child-session draft.
 - **User-editable overrides**: supports `config.json` (auto-submit countdown) and `prompt.md` (style guide) without editing TypeScript.
-- **Rewind integration (explicit + gated)**: when the `rewind` extension is installed, `handover` emits a `rewind:fork-preference` event requesting a conversation-only fork ("keep current files") for the fork it triggers.
+- **Rewind integration (explicit + gated)**: when [pi-rewind-hook](https://github.com/nicobailon/pi-rewind-hook) is installed, `handover` emits a `rewind:fork-preference` event requesting a conversation-only fork ("keep current files") for the fork it triggers.
 - **Designed to pair with `session-ask`**: because `/handover` creates a real fork (parentSession chain), the [`session-ask/`](../session-ask/) extension can (optionally, via its own config) inject a minimal "Fork lineage" hint into the system prompt after a fork, including the parent session path—so the agent can quickly call `session_ask`/`session_lineage` to consult parent history as needed.
 
 ## Features
@@ -28,9 +28,9 @@ The files-touched list covers supported tools run inside pi-codex-conversion Cod
   - pastes the handover draft into the child session editor with the same files-touched list appended verbatim
   - optional auto-submit countdown (cancelled by typing or `Esc`; `Enter` submits normally)
 
-- Optional integration with `rewind`
-  - if the `rewind` extension is installed, `handover` requests a **conversation-only fork** ("keep current files")
-  - if `rewind` is not installed, `handover` still works normally
+- Optional integration with [pi-rewind-hook](https://github.com/nicobailon/pi-rewind-hook)
+  - if this extension is installed, `handover` requests a **conversation-only fork** ("keep current files")
+  - if it's not installed, `handover` still works normally
 
 ## Installation
 

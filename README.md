@@ -1,6 +1,6 @@
-# .π
+# dot314
 
-Extensions, skills, prompts, and themes for the [Pi coding agent](https://github.com/badlogic/pi-mono).  Several of the extensions and prompts are designed to facilitate integration of Pi and [RepoPrompt](https://repoprompt.com/docs#s=overview).
+Extensions, skills, prompts, and themes for the [Pi coding agent](https://github.com/badlogic/pi-mono).  Several of the extensions are designed to facilitate integration of Pi and [RepoPrompt](https://repoprompt.com/docs#s=overview).
 
 This collection is tailored to my workflow and preferences.  I may introduce breaking changes without notice.  While most of the extensions are original or modified, some that were authored by others are republished here unmodified, and those may lag well behind their upstream versions.  Extensions published as [Pi packages](#install-individual-extensions-from-npm) receive my active maintenance.
 
@@ -147,7 +147,6 @@ These extensions are tracked in the repository but not exported by the Pi packag
 | ● | `pi-codex-apply-patch-display/` |
 | ○ | `preset.ts` |
 | ● | `repoprompt-cli/` |
-| ◐ | `rewind/` — if not using `anycopy`, then use upstream [`pi-rewind-hook`](https://github.com/nicobailon/pi-rewind-hook) |
 | ● | `subagent-bridge/` |
 | ○ | `titlebar-spinner.ts` |
 | ○ | `todos.ts` |
@@ -178,6 +177,7 @@ These other extensions have also improved my QoL in Pi, so I recommend checking 
 | [pi-prompt-template-model](https://github.com/nicobailon/pi-prompt-template-model) (nicobailon) | Adds `model`, `skill`, and `thinking` frontmatter to pi prompt templates and chained prompt template execution | `pi install npm:pi-prompt-template-model` |
 | [pi-queue-steer](https://github.com/tmustier/pi-queue-steer) (tmustier) | Cursor-inspired visible steering and follow-up timeline: queue instructions while the agent works, with editable steering (next turn) and follow-up (after run) lanes | `pi install git:github.com/tmustier/pi-queue-steer` |
 | [pi-retry](https://github.com/monotykamary/pi-retry) (monotykamary) | Automatically retries most errors with capped backoff and continues after output-token limits | `pi install https://github.com/monotykamary/pi-retry` |
+| [pi-rewind-hook](https://github.com/nicobailon/pi-rewind-hook) (nicobailon) | Records exact rewind points for files, allowing restoration during `/tree` navigation and across resumed and forked sessions | `pi install npm:pi-rewind-hook` |
 | [pi-rtk-optimizer](https://github.com/MasuRii/pi-rtk-optimizer) (MasuRii) | Read-tool-kit context optimization for token efficiency | `pi install npm:pi-rtk-optimizer` |
 | [pi-screenshots-picker](https://github.com/Graffioh/pi-screenshots-picker) (Graffioh) | Quick screenshot selection and attachment for prompts | `pi install npm:pi-screenshots-picker` |
 | [pi-token-burden](https://github.com/Whamp/pi-token-burden) (Whamp) | Token usage breakdown and context burden analysis | `pi install npm:pi-token-burden` |
@@ -204,18 +204,8 @@ The Pi package does not export skills.  See [skills/README.markdown](skills/READ
 | ○ | `deep-x-research/` | Requires [surf-cli](https://github.com/nicobailon/surf-cli) |
 | ○ | `gdcli/` | |
 | ● | `repoprompt-tool-guidance-refresh/` | Maintainer workflow |
+| ● | [`rp/`](skills/rp/) | Agent guidance for using the `repoprompt-mcp` extension's `rp` tool |
 | ● | `rp-deep-build/` | Requires [pi-codex-goal](https://github.com/fitchmultz/pi-codex-goal) |
 | ○ | `surf/` | Requires [surf-cli](https://github.com/nicobailon/surf-cli) |
 | ◐ | `text-search/` | |
 | ◐ | `xcodebuildmcp/` | |
-
-## Prompts
-
-Prompts are not exported as part of the Pi package.
-
-**AGENTS.md prefaces for reliable RepoPrompt tool usage** — see [AGENTS-prefaces/README.md](AGENTS-prefaces/README.md)
-
-| | Preface |
-|---|---|
-| ● | `AGENTS-prefaces/rp-mcp-preface.md` |
-| ● | `AGENTS-prefaces/rp-mcp-preface-exPi.md` |

@@ -74,13 +74,6 @@ text. This file provides a consolidated overview.
 - **Used in:**
   - `extensions/session-switch/` (◐ modified — mirrors native /resume layout with an extension-driven startup relaunch workaround)
 
-### nicobailon/pi-rewind-hook
-- **URL:** https://github.com/nicobailon/pi-rewind-hook
-- **License:** MIT (declared in package.json)
-- **Copyright:** © Nico Bailon
-- **Used in:**
-  - `extensions/rewind/` (◐ modified — menu reorder)
-
 ### MasuRii/pi-tool-display
 - **URL:** https://github.com/MasuRii/pi-tool-display
 - **License:** MIT (declared in package.json)
