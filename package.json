@@ -51,6 +51,7 @@
       "./extensions/screenshots-picker/index.ts",
       "./extensions/skill-templates/index.ts",
       "./extensions/stash/index.ts",
+      "./extensions/tool-horizon/index.ts",
       "./extensions/tools/index.ts",
       "./extensions/usage-bar.ts"
     ],

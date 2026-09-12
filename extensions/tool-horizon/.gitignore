@@ -1,0 +1,4 @@
+.DS_Store
+*.log
+/maintainability-reviews.md
+/prompt-exports/

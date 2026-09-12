@@ -299,6 +299,13 @@
   <img width="450" alt="/switch-session demo" src="https://raw.githubusercontent.com/w-winter/dot314/main/assets/switch-session-demo.gif" />
 </p>
 
+- ◐ [`tool-horizon/`](tool-horizon/) ([README](tool-horizon/README.md)) (upstream: [crstdr/diligent-pi `diligent-context`](https://github.com/crstdr/diligent-pi/tree/main/extensions/diligent-context))
+  - Keeps user messages and assistant prose in model context while hiding older tool calls and their results before a selected horizon
+  - Replaces the upstream flat, reverse-chronological payload picker with Pi's session-tree picker for the current branch in native tree order, initially focused on the newest selectable entry; adds a scrolling preview, filtering, unavailable-row explanations, right-aligned savings, and stale-selection rejection
+  - Resolves tree rows against the exact outgoing payload, follows current Pi context projection and compaction semantics, and rebuilds caches across session starts, tree navigation, forks, switches, completed turns, and context transforms
+  - Stores the horizon and its deterministic file-provenance checkpoint as adjacent branch-local entries; provenance covers Pi file tools, RepoPrompt, Codex filesystem tools, nested Code/Notebook calls, and literal `rp-cli` or `rpce-cli` commands
+  - Restores all tool history after compaction by default, including compaction inside an active run, and can retain the horizon when `restoreAllAfterCompaction` is disabled
+
 - ◐ [`tools/`](tools/) (upstream: [pi-mono examples](https://github.com/badlogic/pi-mono/tree/main/packages/coding-agent/examples/extensions))
   - `/tools` interactive enable/disable UI
   - This version persists tool enablement globally ([`tools/tools.json`](tools/tools.json)) and per-session via session entries

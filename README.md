@@ -132,6 +132,7 @@ See [extensions/README.md](extensions/README.md) for more detailed descriptions.
 | ◐ | `screenshots-picker/` | | Screenshot picker with sent-image previews and Orca support |
 | ● | `skill-templates/` | [`pi-skill-templates`](https://www.npmjs.com/package/pi-skill-templates) | Nunjucks-templated `SKILL.template.md` skills rendered from invocation args, options, and flags, and composed from other skills |
 | ◐ | `stash/` | | Shortcut-driven editor draft stash, restore, and swap |
+| ◐ | `tool-horizon/` | | Hides older tool activity before a chosen session-tree horizon while retaining file provenance |
 | ◐ | `tools/` | | UI for enabling/disabling active Pi tools |
 | ◐ | `usage-bar.ts` | | Provider quota overlay |
 
@@ -155,7 +156,6 @@ These extensions are tracked in the repository but not exported by the Pi packag
 | ● | `subagent-bridge/` |
 | ○ | `titlebar-spinner.ts` |
 | ○ | `todos.ts` |
-| ◐ | `tool-horizon/` |
 
 ### Other recommended extensions
 
@@ -165,7 +165,6 @@ These other extensions have also improved my QoL in Pi, so I recommend checking 
 |---|---|---|
 | [bookmark](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/examples/extensions/bookmark.ts) (badlogic) | `/bookmark <label>` to label the last message in the session tree | Copy to `~/.pi/agent/extensions/` |
 | [diff](https://github.com/badlogic/pi-mono/blob/main/.pi/extensions/diff.ts) (badlogic) | `/diff` shows git-changed files and opens selected file in VS Code's diff view | Copy to `~/.pi/agent/extensions/` |
-| [diligent-pi](https://github.com/crstdr/diligent-pi) (crstdr) | `/diligent-context` hides past tool calls from the context, a useful alternative to compaction in some types of sessions |  |
 | [greprip](https://github.com/kaofelix/greprip) (kaofelix) | Transparent interception of `grep`/`find` commands, translating them to `rg`/`fd` for speed | `uv tool install git+https://github.com/kaofelix/greprip` + [shell config](https://github.com/kaofelix/greprip#2-configure-pi) |
 | [loop](https://github.com/mitsuhiko/agent-stuff/blob/main/pi-extensions/loop.ts) (mitsuhiko) | `/loop` starts a follow-up loop with a breakout condition | Copy to `~/.pi/agent/extensions/` |
 | [pi-codex-conversion](https://github.com/IgorWarzocha/howaboua-pi-stuff/tree/main/packages/pi-codex-conversion) (IgorWarzocha) | Codex-shaped tools for openai-codex models, plus Responses compaction, model verbosity controls, cached transport, and other niceties | `pi install npm:@howaboua/pi-codex-conversion` |

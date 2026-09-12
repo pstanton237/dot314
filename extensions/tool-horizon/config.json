@@ -1,0 +1,4 @@
+{
+  "warnBeforeRestoreAllThresholdPercent": 70,
+  "restoreAllAfterCompaction": true
+}

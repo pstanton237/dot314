@@ -38,6 +38,13 @@ text. This file provides a consolidated overview.
   - `extensions/repoprompt-cli/readcache/` (◐ derived implementation)
   - `extensions/repoprompt-mcp/src/readcache/` (◐ derived implementation)
 
+### crstdr/diligent-pi
+- **URL:** https://github.com/crstdr/diligent-pi
+- **License:** MIT
+- **Copyright:** © 2026 Cristian Darie
+- **Used in:**
+  - `extensions/tool-horizon/` (◐ modified from `extensions/diligent-context/`; adds a session-tree picker, Tool Horizon namespace, context/cache reconstruction, compaction restore-all lifecycle, and expanded file-provenance checkpoints)
+
 ### tmustier/pi-extensions
 - **URL:** https://github.com/tmustier/pi-extensions
 - **License:** MIT
