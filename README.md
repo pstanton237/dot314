@@ -102,8 +102,6 @@ See [extensions/README.md](extensions/README.md) for more detailed descriptions.
 | ● | `anycopy/` | [`pi-anycopy`](https://www.npmjs.com/package/pi-anycopy) | `/tree` with live syntax-highlighted preview + copy |
 | ● | `assistant-provenance/` | [`pi-assistant-provenance`](https://www.npmjs.com/package/pi-assistant-provenance) | Gives models awareness of mid-session model switches |
 | ◐ | `branch-out/` | [`pi-branch-out`](https://www.npmjs.com/package/pi-branch-out) | Fork session into split pane or new tab with layout policies and optional model/message queuing |
-| ● | `brave-search/` | [`pi-brave-search`](https://www.npmjs.com/package/pi-brave-search) | Web search + content extraction. 🔄 Consider [pi-web-access](https://github.com/nicobailon/pi-web-access) for general-purpose search |
-| ◐ | `cmux/` | | cmux sidebar integration + workspace auto-renaming; no-op outside cmux |
 | ● | `command-center/` | [`pi-command-center`](https://www.npmjs.com/package/pi-command-center) | `/command` palette widget |
 | ◐ | `editor-enhancements/` | | File picker, shell completions, raw paste, double-esc and slash command remapping |
 | ● | `ephemeral-mode.ts` | [`pi-ephemeral`](https://www.npmjs.com/package/pi-ephemeral) | Delete session on exit |
@@ -112,20 +110,15 @@ See [extensions/README.md](extensions/README.md) for more detailed descriptions.
 | ● | `grounded-compaction/` | [`pi-grounded-compaction`](https://www.npmjs.com/package/pi-grounded-compaction) | Compaction summarizer with model presets, custom prompts, shared files-touched tracking, and cross-provider checkpoint summaries |
 | ◐ | `handover/` | | Handover draft with files-touched → fork-from-first → prefill editor |
 | ◐ | `image-url-broker/` | | Publishes inline images as stable HTTPS URLs for supported providers |
-| ● | `iterm-tab-color.ts` | | Two-state tab coloring (running vs. idle) for iTerm2 |
 | ● | `md.ts` | [`pi-md-export`](https://www.npmjs.com/package/pi-md-export) | Export session branch or last N turns to Markdown file or clipboard |
 | ● | `model-aware-compaction/` | [`pi-model-aware-compaction`](https://www.npmjs.com/package/pi-model-aware-compaction) | Per-model compaction thresholds |
 | ● | `model-sysprompt-appendix/` | [`pi-model-sysprompt-appendix`](https://www.npmjs.com/package/pi-model-sysprompt-appendix) | Per-model system prompt additions |
 | ● | `move-session.ts` | [`pi-move-session`](https://www.npmjs.com/package/pi-move-session) | Move current active session to a new cwd |
-| ◐ | `plan-mode.ts` | [`pi-plan-modus`](https://www.npmjs.com/package/pi-plan-modus) | Read-only planning sandbox with RepoPrompt support |
 | ◐ | `pi-codex-goal/` | | Durable Codex-style goal tracking and continuation |
 | ◐ | `pi-queue-steer/` | | Editable steering and follow-up queues with RepoPrompt-aware interruption events |
-| ● | `poly-notify/` | [`pi-poly-notify`](https://www.npmjs.com/package/pi-poly-notify) | Desktop / sound / Pushover notifications |
 | ● | `protect-paths/` | | Directory protection with configurable trusted read paths, brew prevention, and command gates. Pair with [`@aliou/pi-guardrails`](https://github.com/aliou/pi-guardrails) for `.env` protection |
 | ● | `repoprompt-mcp/` | [`pi-repoprompt-mcp`](https://www.npmjs.com/package/pi-repoprompt-mcp) | RepoPrompt MCP proxy with adaptive diff rendering, collapsed outputs, read-cache, and branch-safe binding |
 | ● | `reverse-thinking.ts` | | Backward thinking-level cycling on `shift+alt+tab` |
-| ● | `roam/` | [`pi-roam`](https://www.npmjs.com/package/pi-roam) | Post-hoc tmux handoff for remote continuation of sessions |
-| ● | `rp-native-tools-lock/` | [`pi-repoprompt-tools-lock`](https://www.npmjs.com/package/pi-repoprompt-tools-lock) | Prefer RP tools over Pi native tools |
 | ◐ | `sandbox/` | | OS-level sandboxing |
 | ● | `session-ask/` | [`pi-session-ask`](https://www.npmjs.com/package/pi-session-ask) | Query "pre-historical" context (post-compaction, post-fork/handoff) via subagent |
 | ◐ | `session-switch/` | | `/resume`-style session picker with live preview, plus `pi --switch-session` startup relaunch |
@@ -142,17 +135,24 @@ These extensions are tracked in the repository but not exported by the Pi packag
 
 | | Extension |
 |---|---|
+| ● | `brave-search/` |
 | ○ | `code-actions/` |
+| ◐ | `cmux/` |
 | ● | `codex-compaction-coordinator/` |
 | ● | `computer-use-toggle.ts` |
 | ● | `context-limit-fallback/` |
 | ◐ | `extension-stats.ts` |
 | ● | `inline-shell.ts` |
 | ○ | `interactive-shell.ts` |
+| ● | `iterm-tab-color.ts` |
 | ● | `orca-session-tab-title/` |
+| ◐ | `plan-mode.ts` |
 | ● | `pi-codex-apply-patch-display/` |
+| ● | `poly-notify/` |
 | ○ | `preset.ts` |
 | ● | `repoprompt-cli/` |
+| ● | `roam/` |
+| ● | `rp-native-tools-lock/` |
 | ● | `subagent-bridge/` |
 | ○ | `titlebar-spinner.ts` |
 | ○ | `todos.ts` |
