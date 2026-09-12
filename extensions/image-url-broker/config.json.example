@@ -1,0 +1,4 @@
+{
+	"publicBaseUrl": "https://images.example.org/pi/",
+	"outputDirectory": "/absolute/path/to/pi-images"
+}

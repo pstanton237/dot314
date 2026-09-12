@@ -46,6 +46,41 @@ text. This file provides a consolidated overview.
   - `extensions/editor-enhancements/` (◐ raw-paste component)
   - `extensions/code-actions/` (○ unmodified, with sandbox additions)
 
+### can1357/oh-my-pi
+- **URL:** https://github.com/can1357/oh-my-pi
+- **License:** MIT
+- **Copyright:** © 2025 Mario Zechner; © 2025-2026 Can Bölük; © 2026 Stencil Labs, Inc.
+- **Used in:**
+  - `extensions/image-url-broker/` (◐ independent Pi extension informed by the blob broker's image-handling design)
+
+### fitchmultz/pi-codex-goal
+- **URL:** https://github.com/fitchmultz/pi-codex-goal
+- **License:** MIT
+- **Copyright:** © 2026 Mitch Fultz
+- **Used in:**
+  - `extensions/pi-codex-goal/` (◐ modified — defers mid-run compaction to the next `context` event after a complete tool turn and updates the smoke test for Pi's SDK runtime)
+
+### Graffioh/pi-screenshots-picker
+- **URL:** https://github.com/Graffioh/pi-screenshots-picker
+- **License:** MIT
+- **Copyright:** © 2026 Umberto B.
+- **Used in:**
+  - `extensions/screenshots-picker/` (◐ modified — sent-image previews, Orca terminal support, custom shortcuts, clear notifications, current Pi imports, and updated glob dependency)
+
+### saadjs/pi
+- **URL:** https://github.com/saadjs/pi
+- **License:** MIT (declared in `extensions/stash/package.json`)
+- **Copyright:** © 2026 Saad Bash
+- **Used in:**
+  - `extensions/stash/` (◐ reimplemented as a session-local manual stash, restore, and swap shortcut)
+
+### tmustier/pi-queue-steer
+- **URL:** https://github.com/tmustier/pi-queue-steer
+- **License:** MIT
+- **Copyright:** © 2026 Thomas Mustier
+- **Used in:**
+  - `extensions/pi-queue-steer/` (◐ modified — slash-command follow-ups, bidirectional lane conversion, and content-free accepted-steering events)
+
 ### davidgasquez/dotfiles
 - **URL:** https://github.com/davidgasquez/dotfiles
 - **License:** MIT

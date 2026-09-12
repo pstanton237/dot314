@@ -1,0 +1,8 @@
+{
+  "name": "dot314-image-url-broker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --import tsx --test test/index.test.ts"
+  }
+}

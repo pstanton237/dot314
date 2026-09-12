@@ -1,6 +1,6 @@
 {
   "name": "dot314",
-  "version": "0.5.7",
+  "version": "0.5.8",
   "private": true,
   "description": "Collection of original and modded Pi extensions, several of which facilitate Pi's integration with RepoPrompt.",
   "keywords": [
@@ -34,23 +34,30 @@
       "./extensions/fork-from-first.ts",
       "./extensions/grounded-compaction/index.ts",
       "./extensions/handover/index.ts",
+      "./extensions/image-url-broker/index.ts",
       "./extensions/protect-paths/index.ts",
       "./extensions/md.ts",
       "./extensions/assistant-provenance/index.ts",
       "./extensions/model-aware-compaction/index.ts",
       "./extensions/model-sysprompt-appendix/index.ts",
       "./extensions/move-session.ts",
+      "./extensions/pi-codex-goal/src/index.ts",
+      "./extensions/pi-queue-steer/index.ts",
       "./extensions/repoprompt-mcp/src/index.ts",
       "./extensions/reverse-thinking.ts",
       "./extensions/sandbox/index.ts",
       "./extensions/session-ask/index.ts",
       "./extensions/session-switch/index.ts",
+      "./extensions/screenshots-picker/index.ts",
       "./extensions/skill-templates/index.ts",
+      "./extensions/stash/index.ts",
       "./extensions/tools/index.ts",
       "./extensions/usage-bar.ts"
     ],
     "skills": [],
-    "prompts": [],
+    "prompts": [
+      "./extensions/pi-codex-goal/prompts"
+    ],
     "themes": [
       "./themes"
     ]
@@ -61,6 +68,7 @@
     "@modelcontextprotocol/sdk": "^1.12.1",
     "@mozilla/readability": "^0.5.0",
     "diff": "^7.0.0",
+    "glob": "^13.0.6",
     "ignore": "^7.0.5",
     "jsdom": "^26.0.0",
     "just-bash": "^2.10.0",

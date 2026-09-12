@@ -1,6 +1,6 @@
 # dot314
 
-Extensions, skills, prompts, and themes for the [Pi coding agent](https://github.com/earendil-works/pi).  Several of the extensions are designed to facilitate integration of Pi and [RepoPrompt CE](https://github.com/repoprompt/repoprompt-ce).
+Extensions, skills, and themes for the [Pi coding agent](https://github.com/earendil-works/pi).  Several of the extensions are designed to facilitate integration of Pi and [RepoPrompt CE](https://github.com/repoprompt/repoprompt-ce).
 
 This collection is tailored to my workflow and preferences.  I may introduce breaking changes without notice.  While most of the extensions are original or modified, some that were authored by others are republished here unmodified, and those may lag well behind their upstream versions.  Extensions published as [Pi packages](#install-individual-extensions-from-npm) receive my active maintenance.
 
@@ -45,7 +45,7 @@ Project-local install (writes to `.pi/settings.json`):
 pi install -l git:github.com/w-winter/dot314
 ```
 
-After installing, use `pi config` to enable/disable individual extensions, skills, and themes. You can also filter in `settings.json`, as in this example:
+After installing, use `pi config` to enable or disable individual extensions, skills, and themes. You can also filter in `settings.json`, as in this example:
 
 ```json
 {
@@ -111,12 +111,15 @@ See [extensions/README.md](extensions/README.md) for more detailed descriptions.
 | ● | `fork-from-first.ts` | [`pi-fork-from-first`](https://www.npmjs.com/package/pi-fork-from-first) | Quickly fork session from first message to establish parent-child lineage in a blank new session |
 | ● | `grounded-compaction/` | [`pi-grounded-compaction`](https://www.npmjs.com/package/pi-grounded-compaction) | Compaction summarizer with model presets, custom prompts, shared files-touched tracking, and cross-provider checkpoint summaries |
 | ◐ | `handover/` | | Handover draft with files-touched → fork-from-first → prefill editor |
+| ◐ | `image-url-broker/` | | Publishes inline images as stable HTTPS URLs for supported providers |
 | ● | `iterm-tab-color.ts` | | Two-state tab coloring (running vs. idle) for iTerm2 |
 | ● | `md.ts` | [`pi-md-export`](https://www.npmjs.com/package/pi-md-export) | Export session branch or last N turns to Markdown file or clipboard |
 | ● | `model-aware-compaction/` | [`pi-model-aware-compaction`](https://www.npmjs.com/package/pi-model-aware-compaction) | Per-model compaction thresholds |
 | ● | `model-sysprompt-appendix/` | [`pi-model-sysprompt-appendix`](https://www.npmjs.com/package/pi-model-sysprompt-appendix) | Per-model system prompt additions |
 | ● | `move-session.ts` | [`pi-move-session`](https://www.npmjs.com/package/pi-move-session) | Move current active session to a new cwd |
 | ◐ | `plan-mode.ts` | [`pi-plan-modus`](https://www.npmjs.com/package/pi-plan-modus) | Read-only planning sandbox with RepoPrompt support |
+| ◐ | `pi-codex-goal/` | | Durable Codex-style goal tracking and continuation |
+| ◐ | `pi-queue-steer/` | | Editable steering and follow-up queues with RepoPrompt-aware interruption events |
 | ● | `poly-notify/` | [`pi-poly-notify`](https://www.npmjs.com/package/pi-poly-notify) | Desktop / sound / Pushover notifications |
 | ● | `protect-paths/` | | Directory protection with configurable trusted read paths, brew prevention, and command gates. Pair with [`@aliou/pi-guardrails`](https://github.com/aliou/pi-guardrails) for `.env` protection |
 | ● | `repoprompt-mcp/` | [`pi-repoprompt-mcp`](https://www.npmjs.com/package/pi-repoprompt-mcp) | RepoPrompt MCP proxy with adaptive diff rendering, collapsed outputs, read-cache, and branch-safe binding |
@@ -126,7 +129,9 @@ See [extensions/README.md](extensions/README.md) for more detailed descriptions.
 | ◐ | `sandbox/` | | OS-level sandboxing |
 | ● | `session-ask/` | [`pi-session-ask`](https://www.npmjs.com/package/pi-session-ask) | Query "pre-historical" context (post-compaction, post-fork/handoff) via subagent |
 | ◐ | `session-switch/` | | `/resume`-style session picker with live preview, plus `pi --switch-session` startup relaunch |
+| ◐ | `screenshots-picker/` | | Screenshot picker with sent-image previews and Orca support |
 | ● | `skill-templates/` | [`pi-skill-templates`](https://www.npmjs.com/package/pi-skill-templates) | Nunjucks-templated `SKILL.template.md` skills rendered from invocation args, options, and flags, and composed from other skills |
+| ◐ | `stash/` | | Shortcut-driven editor draft stash, restore, and swap |
 | ◐ | `tools/` | | UI for enabling/disabling active Pi tools |
 | ◐ | `usage-bar.ts` | | Provider quota overlay |
 
@@ -164,7 +169,6 @@ These other extensions have also improved my QoL in Pi, so I recommend checking 
 | [greprip](https://github.com/kaofelix/greprip) (kaofelix) | Transparent interception of `grep`/`find` commands, translating them to `rg`/`fd` for speed | `uv tool install git+https://github.com/kaofelix/greprip` + [shell config](https://github.com/kaofelix/greprip#2-configure-pi) |
 | [loop](https://github.com/mitsuhiko/agent-stuff/blob/main/pi-extensions/loop.ts) (mitsuhiko) | `/loop` starts a follow-up loop with a breakout condition | Copy to `~/.pi/agent/extensions/` |
 | [pi-codex-conversion](https://github.com/IgorWarzocha/howaboua-pi-stuff/tree/main/packages/pi-codex-conversion) (IgorWarzocha) | Codex-shaped tools for openai-codex models, plus Responses compaction, model verbosity controls, cached transport, and other niceties | `pi install npm:@howaboua/pi-codex-conversion` |
-| [pi-codex-goal](https://github.com/fitchmultz/pi-codex-goal) (fitchmultz) | Durable Codex-style `/goal` command with `get_goal`, `create_goal`, and `update_goal` tools; goal state persists across compaction and session recovery | `pi install npm:pi-codex-goal` |
 | [pi-computer-use](https://github.com/injaneity/pi-computer-use) (injaneity) | Desktop app observation and interaction tools for macOS, Windows, and Linux | `pi install npm:@injaneity/pi-computer-use` |
 | [pi-guardrails](https://github.com/aliou/pi-guardrails) (aliou) | `.env` file protection + AST-based dangerous command gates | `pi install npm:@aliou/pi-guardrails` |
 | [pi-interactive-subagents](https://github.com/HazAT/pi-interactive-subagents) (HazAT) | Spawn, orchestrate, and manage async subagent sessions in multiplexer cmux panes; main agent keeps working while subagents run in the background | `pi install git:github.com/HazAT/pi-interactive-subagents` |
@@ -175,11 +179,9 @@ These other extensions have also improved my QoL in Pi, so I recommend checking 
 | [pi-model-thinking](https://github.com/ogulcancelik/pi-extensions/tree/main/packages/pi-model-thinking) (ogulcancelik) | Stores and recalls last-selected thinking level per model | `pi install npm:@ogulcancelik/pi-model-thinking` |
 | [pi-nvim](https://github.com/aliou/pi-harness/tree/main/integrations/neovim) (aliou) | Bidirectional Neovim integration: `nvim_context` tool, LSP diagnostics at turn end, file reload after edits, visible-splits injection | Neovim plugin; see [setup instructions](https://github.com/aliou/pi-harness/tree/main/integrations/neovim#installation) |
 | [pi-prompt-template-model](https://github.com/nicobailon/pi-prompt-template-model) (nicobailon) | Adds `model`, `skill`, and `thinking` frontmatter to pi prompt templates and chained prompt template execution | `pi install npm:pi-prompt-template-model` |
-| [pi-queue-steer](https://github.com/tmustier/pi-queue-steer) (tmustier) | Cursor-inspired visible steering and follow-up timeline: queue instructions while the agent works, with editable steering (next turn) and follow-up (after run) lanes | `pi install git:github.com/tmustier/pi-queue-steer` |
 | [pi-retry](https://github.com/monotykamary/pi-retry) (monotykamary) | Automatically retries most errors with capped backoff and continues after output-token limits | `pi install https://github.com/monotykamary/pi-retry` |
 | [pi-rewind-hook](https://github.com/nicobailon/pi-rewind-hook) (nicobailon) | Records exact rewind points for files, allowing restoration during `/tree` navigation and across resumed and forked sessions | `pi install npm:pi-rewind-hook` |
 | [pi-rtk-optimizer](https://github.com/MasuRii/pi-rtk-optimizer) (MasuRii) | Read-tool-kit context optimization for token efficiency | `pi install npm:pi-rtk-optimizer` |
-| [pi-screenshots-picker](https://github.com/Graffioh/pi-screenshots-picker) (Graffioh) | Quick screenshot selection and attachment for prompts | `pi install npm:pi-screenshots-picker` |
 | [pi-token-burden](https://github.com/Whamp/pi-token-burden) (Whamp) | Token usage breakdown and context burden analysis | `pi install npm:pi-token-burden` |
 | [pi-tool-display](https://github.com/MasuRii/pi-tool-display) (MasuRii) | Compact tool call rendering with diff visualization | `pi install npm:pi-tool-display` |
 | [pi-web-access](https://github.com/nicobailon/pi-web-access) (nicobailon) | Gemini-powered web search with AI-synthesized overviews and citations | `pi install npm:pi-web-access` |

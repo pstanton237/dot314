@@ -236,6 +236,29 @@
 - ◐ [`branch-out/`](branch-out/) ([README](branch-out/README.md)) (upstream: [davidgasquez/dotfiles](https://github.com/davidgasquez/dotfiles/blob/main/agents/pi/extensions/branch-term.ts))
   - `/branch [--model <query>] [message]` forks the current session into a new terminal split pane or tab; backend-aware routing across cmux, tmux, iTerm2, Terminal.app, Ghostty, and Orca; split direction is config-driven (`left/right/up/down`, or `clockwise`/`counterclockwise` layout policies for cmux/tmux) with comma-separated fallback lists for cross-backend configs; optional `--model` targets a different model in the child; optional `message` prefills the child editor with a 10-second auto-submit countdown
 
+- ◐ [`image-url-broker/`](image-url-broker/) ([README](image-url-broker/README.md)) (design source: [can1357/oh-my-pi blob broker](https://github.com/can1357/oh-my-pi/tree/main/packages/coding-agent/src/blob-broker))
+  - Publishes JPEG, PNG, GIF, and WebP data to a configured static HTTPS directory and replaces repeated inline base64 in supported Anthropic and OpenAI provider requests with content-addressed URLs
+  - Keeps ordinary base64 image data in Pi sessions and retries a failed Codex URL request once with inline image data
+
+- ◐ [`pi-codex-goal/`](pi-codex-goal/) ([README](pi-codex-goal/README.md)) (upstream: [fitchmultz/pi-codex-goal](https://github.com/fitchmultz/pi-codex-goal))
+  - Adds durable `/goal` tracking, model-callable goal tools, budget and elapsed-time accounting, automatic continuation, compaction recovery, and provider-limit recovery
+  - This version schedules mid-run compaction at the next `context` event before a provider request after a qualifying turn that uses a tool, so Pi persists the complete tool call and result before compaction changes provider context
+  - Updates the smoke test that exercises Pi's SDK runtime to use the `ModelRuntime` API
+
+- ◐ [`pi-queue-steer/`](pi-queue-steer/) ([README](pi-queue-steer/README.md)) (upstream: [tmustier/pi-queue-steer](https://github.com/tmustier/pi-queue-steer))
+  - Shows independent, editable steering and follow-up queues while preserving Pi's native delivery timing
+  - Adds `/followup <message>`, `/steer <message>` while editing a follow-up, and symmetric `Option+Enter` conversion between queue lanes
+  - Emits a content-free accepted-steering event used by `pi-repoprompt-mcp` to interrupt attended RepoPrompt waits as soon as Pi accepts steering
+
+- ◐ [`screenshots-picker/`](screenshots-picker/) ([README](screenshots-picker/README.md)) (upstream: [Graffioh/pi-screenshots-picker](https://github.com/Graffioh/pi-screenshots-picker))
+  - Browses and stages screenshots from configurable sources, then attaches them to the next prompt
+  - Adds sent-screenshot previews that follow Pi's image visibility and resizing settings, plus metadata previews for Orca terminals
+  - Uses `Ctrl+\`` to open the picker and `Ctrl+1` to clear staged screenshots, reports picker-based clears, opens files in the system image viewer, imports the current `@earendil-works` Pi packages, and updates `glob` to 13.0.6
+
+- ◐ [`stash/`](stash/) ([README](stash/README.md)) (upstream: [saadjs/pi stash](https://github.com/saadjs/pi/tree/main/extensions/stash))
+  - A configurable shortcut stashes the current editor text, restores it into an empty editor, or swaps it with another draft
+  - Keeps one session-local text stash and shows its presence in the footer
+
 - ◐ [`handover/`](handover/) ([README](./handover/README.md))
   - `/handover [optional purpose]` generates a rich handover / rehydration message, forks from the first user message, and prefills the child editor with the final draft plus an appended files-touched block
   - Borrows heavily from [pasky/pi-amplike](https://github.com/pasky/pi-amplike) and [damianpdr/pi-handoff](https://github.com/damianpdr/pi-handoff) (both inspired by Amp's /handoff feature), and [mitsuhiko's handoff prompt](https://github.com/mitsuhiko/agent-stuff/blob/main/commands/handoff.md)
